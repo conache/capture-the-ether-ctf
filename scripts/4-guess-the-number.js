@@ -1,11 +1,36 @@
+const { keccak256 } = require("ethers/lib/utils");
 const { ethers } = require("hardhat");
 
-const CHALLENGE_CONTRACT_ADDRESS = "0x60f8f911CB19feA9D0793CFB44Dfc21B31049798";
-
 async function main() {
-  const guessTheNumber = await ethers.getContractAt("GuessTheNumberChallenge", CHALLENGE_CONTRACT_ADDRESS);
+  const [deployer, attacker] = await hre.ethers.getSigners();
+  const wantedHash = "0xdb81b4d58595fbbbb592d3661a34cdca14d7ab379441400cbfa1b78bc447c365";
+  const GuessTheNumberContract = await ethers.getContractFactory("GuessTheSecretNumberChallenge", deployer);
+  const guessTheNumber = await GuessTheNumberContract.deploy({ value: ethers.utils.parseEther("1") });
 
-  await guessTheNumber.guess(42, { value: ethers.utils.parseEther("1.0") });
+  let secretNum = 0;
+  for (let tryNo = 0; tryNo <= 2 ** 8 - 1; tryNo++) {
+    if (keccak256(tryNo) !== wantedHash) {
+      continue;
+    }
+    secretNum = tryNo;
+    break;
+  }
+
+  console.log(
+    "Is complete:",
+    await guessTheNumber.isComplete(),
+    "|",
+    "Attacker balance (before the attack):",
+    ethers.utils.formatEther(await ethers.provider.getBalance(attacker.address))
+  );
+  await guessTheNumber.connect(attacker).guess(secretNum, { value: ethers.utils.parseEther("1.0") });
+  console.log(
+    "Is complete:",
+    await guessTheNumber.isComplete(),
+    "|",
+    "Attacker balance (after the attack):",
+    ethers.utils.formatEther(await ethers.provider.getBalance(attacker.address))
+  );
 }
 
 // We recommend this pattern to be able to use async/await everywhere

@@ -32,12 +32,6 @@ module.exports = {
     ],
   },
   networks: {
-    hardhat: {
-      forking: {
-        url: `https://eth-ropsten.alchemyapi.io/v2/${process.env.ALCHEMY_API_KEY}`,
-        blockNumber: 10000310,
-      },
-    },
     ropsten: {
       url: process.env.ROPSTEN_RPC_URL,
       accounts: [process.env.ACCOUNT_1_PK, process.env.ACCOUNT_2_PK],
