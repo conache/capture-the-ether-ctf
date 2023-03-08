@@ -6,7 +6,6 @@ async function main() {
   const HackContract = await ethers.getContractFactory("PredictTheFutureChallengeHack", deployer);
 
   const mainContract = await MainContract.deploy({ value: ethers.utils.parseEther("1") });
-  console.log("MAIN CONTRACT ADDRESS:", mainContract.address);
   const hackContract = await HackContract.deploy(mainContract.address);
 
   await hackContract.lockGuess(9, { value: ethers.utils.parseEther("1") });
