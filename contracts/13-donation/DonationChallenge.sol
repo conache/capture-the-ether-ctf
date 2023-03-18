@@ -32,6 +32,11 @@ contract DonationChallenge {
 
         // @audit if we manage to donate() without sending any msg.value, then we can manipulate the values in the 'donations' array
         // could we also override 'owner' variable somehow doing this?
+
+        // When defining structs one should always define the location, either memory or storage.
+        // When omitted, storage is assumed. To stick with the C++ reference, this code can be understood
+        // as using donation as a reference value to storage location 0, because it hasn’t been initialized with an actual value like donations[0].
+        // Due to the way storage slots are resolved when accessing struct fields, donation.timestamp actually writes to the first storage slot (0), and etherAmount writes to the second storage slot (1), where the owner address is located.
         Donation donation;
         donation.timestamp = now;
         donation.etherAmount = etherAmount;
