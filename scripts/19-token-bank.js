@@ -9,9 +9,6 @@ async function main() {
   const BankContract = await ethers.getContractFactory("TokenBankChallenge", deployer);
   const bankContract = await BankContract.deploy(attackerContract.address);
 
-  const SimpleToken = await ethers.getContractFactory("SimpleERC223Token");
-  const simpleToken = await SimpleToken.attach(await bankContract.token());
-
   await attackerContract.setBankContract(bankContract.address);
   await attackerContract.attack();
 
